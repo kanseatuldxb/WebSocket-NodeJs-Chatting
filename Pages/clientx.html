@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<style>
+		#map {
+			width:100%;
+			height:100%;
+			top: 0px;
+			left: 0px;
+		}
+	</style>
+	<title>Add Map</title>
+	<!-- <link rel="stylesheet" type="text/css" href="./index.css" /> -->
+	<script type="text/javascript">
+		let marker = null;
+		let map = null;
+
+		function initMap() {
+			// The location of Uluru
+			const uluru = {
+				lat: -25.344,
+				lng: 131.036
+			};
+			// The map, centered at Uluru
+			map = new google.maps.Map(document.getElementById("map"), {
+				zoom: 1,
+				center: uluru,
+			});
+			// The marker, positioned at Uluru
+			marker = new google.maps.Marker({
+				position: uluru,
+				map: map,
+				icon: "https://image.flaticon.com/icons/png/128/487/487009.png"
+			});
+		}
+	</script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+</head>
+
+<body>
+	<h3>My Google Maps Demo</h3>
+	<!--The div element for the map -->
+	<div id="map"></div>
+
+	<!-- Async script executes immediately and must be after any DOM elements used in callback. -->
+
+	<h1>The Communication with Socket</h1>
+	Message:<input type='text' id="message">
+	<br />
+	<input type="button" id="btnsend" value="Send" />
+	<div id="dvMessage"></div>
+	<script type="text/javascript">
+		$(document).ready(function () {
+			//1.
+			var ws = new WebSocket("ws://localhost:9060");
+			var communication = "";
+			//2.
+			$("#btnsend").on('click', function () {
+				var message = $("#message").val();
+				ws.send(message);
+				communication = 'Send Message ' + message + "<br/>" + communication;
+
+				$("#dvMessage").html(communication);
+			});
+			//3.
+			ws.onmessage = function (evt) {
+				communication = 'Received Message ' + evt.data + "<br/>" + communication;
+				$("#dvMessage").html(communication);
+				const obj = JSON.parse(evt.data)
+				const uluru = {
+					lat: obj.lat,
+					lng: obj.long
+				};
+				// The map, centered at Uluru
+				// 	const map = new google.maps.Map(document.getElementById("map"), {
+				// 	zoom: 1,
+				// 	center: uluru,
+				// });
+				// The marker, positioned at Uluru
+				marker.setPosition(uluru);
+				map.setCenter(uluru);
+				map.setZoom(1);
+				// const marker = new google.maps.Marker({
+				// 	position: uluru,
+				// 	map: map,
+				// });
+			};
+			//4.
+			ws.onclose = function (evt) {
+				communication = 'Conenction Closed ' + evt.code + "  " + e, type + "<br/>" + communication;
+				$("#dvMessage").html(communication);
+			};
+			//5.
+			ws.onerror = function (evt) {
+				communication = 'Error Occured ' + evt.data + "<br/>" + communication;
+				$("#dvMessage").html(communication);
+			};
+		});
+	</script>
+	<script
+		src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBk1Zm_OFHNCX6IdXNzZZFttvhqq7z9yDI&callback=initMap&libraries=&v=weekly"
+		async></script>
+</body>
+
+</html>

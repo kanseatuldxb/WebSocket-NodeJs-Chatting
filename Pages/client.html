@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Kwiq Chatting Application</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.bundle.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+</head>
+
+<body style="background-image: url('https://media.istockphoto.com/photos/marble-granite-white-panoramic-background-wall-surface-black-pattern-picture-id1296799499?b=1&k=20&m=1296799499&s=170667a&w=0&h=fnTogmRiYVPAXN0zishGUcEvKhKSa8Py8hSM27ICMzM=');">
+	<div class="container " style="background-color: rgba(103, 103, 121, 0.425); padding: 20px;" >
+	<h1 id="HeadUser">My First Chatting Page</h1>
+	<input type='text' id="usernanname" style="width:85%"> <input type="button" id="SetUser" value="Login.." style="width:10%" />
+	<p>The Communication with Socket</p>
+	<input type='text' id="message" style="width:85%"> <input type="button" id="btnsend" value="Send" style="width:10%" />
+	</div>
+	<div class="container" id="dvMessage">
+	 
+	</div>
+	<script type="text/javascript">
+		$(document).ready(function () {
+			//1.
+			var ws = new WebSocket("ws://"+location.hostname+":9060");
+			var communication = "";
+			if(sessionStorage.getItem("UserName") == ""){
+				$("#HeadUser").html("Hi Please Login");
+				document.getElementById('SetUser').value    = 'Login';
+				$("#dvMessage").html("");
+				communication = "";
+			}else{
+				$("#HeadUser").html("Hi " + sessionStorage.getItem("UserName") + " !");
+				document.getElementById("usernanname").value  =  sessionStorage.getItem("UserName");
+				document.getElementById('SetUser').value    = 'Logout';
+			}
+
+			//22.
+			$("#SetUser").on('click', function () {
+				if(sessionStorage.getItem("UserName") == ""){
+					var message = $("#usernanname").val();
+					if(message !=""){
+						sessionStorage.setItem("UserName", message);
+						document.getElementById('SetUser').value    = 'Logout';
+						$("#HeadUser").html("Hi " + sessionStorage.getItem("UserName") + " !");
+					}
+				}else{
+					$("#HeadUser").html("Hi Please Login");
+					document.getElementById('SetUser').value  = 'Login';
+					document.getElementById("usernanname").value  =  '';
+					sessionStorage.setItem("UserName","");
+					$("#dvMessage").html("");
+					communication = "";
+				}
+			});
+
+			//2.
+			$("#btnsend").on('click', function () {
+				var message = $("#message").val();
+				if(message != ""){
+					communication = '<div style="float: right;width: 60%;border:1px dotted red;margin:10px;padding:5px;border-radius: 15px;background-color: rgba(103, 103, 121, 0.425);"><h6>'+  (sessionStorage.getItem("UserName") != "" ? sessionStorage.getItem("UserName") : "Anonymous") + ' ~ ' + new Date().toLocaleTimeString() +'</h6>' + message + "</div>" + communication;
+					$("#dvMessage").html(communication);
+					var username = sessionStorage.getItem("UserName")
+					var messagedata = {
+						user: username,
+						msg: message
+					};
+					ws.send(JSON.stringify(messagedata));
+				}
+				document.getElementById("message").value  =  '';
+			});
+			//3.
+			ws.onmessage = function (evt) {
+				const obj =JSON.parse(evt.data)
+				communication = '<div style="float: left;width: 60%;border:1px dotted blue;margin:10px;padding:5px;border-radius: 15px;background-color: rgba(103, 103, 121, 0.425);"><h6>' + (obj.user != "" ? obj.user : "Anonymous") + ' ~ ' + new Date().toLocaleTimeString() + '</h6>' + obj.msg + "</div>" + communication;
+				$("#dvMessage").html(communication);
+			};
+			//4.
+			ws.onclose = function (evt) {
+				communication = 'Conenction Closed ' + evt.code + "  ", type + "<br/>" + communication;
+				$("#dvMessage").html(communication);
+			};
+			//5.
+			ws.onerror = function (evt) {
+				communication = 'Error Occured ' + evt.data + "<br/>" + communication;
+				$("#dvMessage").html(communication);
+			};
+		});
+	</script>
+</body>
+
+</html>
